@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鏡片數據管理系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        .header p {
+            color: #666;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .filter-group select,
+        .filter-group input[type="text"],
+        .filter-group input[type="number"] {
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-container input[type="range"] {
+            flex-grow: 1;
+        }
+
+        .range-container input[type="number"] {
+            width: 80px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .data-grid {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .grid-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 80px 100px 100px 100px 100px 120px 100px 150px;
+            gap: 15px;
+            font-weight: 600;
+            align-items: center;
+        }
+
+        .grid-row {
+            padding: 15px 20px;
+            display: grid;
+            grid-template-columns: 80px 100px 100px 100px 100px 120px 100px 150px;
+            gap: 15px;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .grid-row:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            transform: scale(1.01);
+        }
+
+        .grid-row:last-child {
+            border-bottom: none;
+        }
+
+        .eye-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .eye-left {
+            background: linear-gradient(45deg, #ff9a9e, #fecfef);
+            color: #8b2635;
+        }
+
+        .eye-right {
+            background: linear-gradient(45deg, #a8edea, #fed6e3);
+            color: #2c5282;
+        }
+
+        .power-value {
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            text-align: center;
+        }
+
+        .negative {
+            color: #e53e3e;
+            background: #fed7d7;
+        }
+
+        .positive {
+            color: #38a169;
+            background: #c6f6d5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .file-item:hover {
+            background: #e9ecef;
+            transform: translateY(-3px);
+            border-color: #667eea;
+        }
+
+        .file-type {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-header,
+            .grid-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .search-filters {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 鏡片數據管理系統</h1>
+            <p>第一階段資料 - 序號 20250507 | 共 42 組鏡片度數組合</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">42</div>
+                <div class="stat-label">度數組合</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">672</div>
+                <div class="stat-label">總檔案數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">336</div>
+                <div class="stat-label">數據檔案</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">336</div>
+                <div class="stat-label">圖像檔案</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-filters">
+                <div class="filter-group">
+                    <label>眼別篩選</label>
+                    <select id="eyeFilter">
+                        <option value="">全部</option>
+                        <option value="OD">右眼 (OD)</option>
+                        <option value="OS">左眼 (OS)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>球面度數範圍 (D)</label>
+                    <div class="range-container">
+                        <input type="range" id="sphRange" min="-10" max="10" step="0.25" value="0">
+                        <input type="number" id="sphInput" min="-10" max="10" step="0.25" value="0">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>散光度數 (D)</label>
+                    <div class="range-container">
+                        <input type="range" id="cylRange" min="-5" max="0" step="0.25" value="0">
+                        <input type="number" id="cylInput" min="-5" max="0" step="0.25" value="0">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>老花度數 (D)</label>
+                    <div class="range-container">
+                        <input type="range" id="addRange" min="0" max="5" step="0.25" value="0">
+                        <input type="number" id="addInput" min="0" max="5" step="0.25" value="0">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>搜索編號</label>
+                    <input type="text" id="searchInput" placeholder="輸入檔案編號...">
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="applyFilters()">🔍 套用篩選</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">🔄 清除條件</button>
+                <button class="btn btn-success" onclick="exportData()">📊 匯出數據</button>
+            </div>
+        </div>
+
+        <div class="data_solver">
+            <div class="grid-header">
+                <div>編號</div>
+                <div>眼別</div>
+                <div>球面(SPH)</div>
+                <div>散光(CYL)</div>
+                <div>軸度</div>
+                <div>老花(ADD)</div>
+                <div>檔案數</div>
+                <div>操作</div>
+            </div>
+            <div id="dataRows">
+                <!-- 這裡會動態生成數據行 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細資訊模態框 -->
+    <div id="detailModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">鏡片數據詳情</h2>
+                <button class="close-btn" aria-label="關閉模態框" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent">
+                    <!-- 動態內容 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模擬鏡片數據
+        const lensData = [
+            { id: 764, eye: 'OS', sph: -8.00, cyl: -2.00, axis: 90, add: 2.00 },
+            { id: 662, eye: 'OD', sph: -4.00, cyl: 0, axis: null, add: 1.50 },
+            { id: 123, eye: 'OS', sph: -6.50, cyl: -1.50, axis: 180, add: 2.50 },
+            { id: 456, eye: 'OD', sph: -2.25, cyl: -0.75, axis: 45, add: 1.00 },
+            { id: 789, eye: 'OS', sph: -10.00, cyl: -3.00, axis: 135, add: 3.00 },
+            { id: 234, eye: 'OD', sph: 2.00, cyl: -1.00, axis: 90, add: 1.75 },
+            { id: 567, eye: 'OS', sph: -1.50, cyl: 0, axis: null, add: 1.25 },
+            { id: 890, eye: 'OD', sph: -7.75, cyl: -2.25, axis: 60, add: 2.25 }
+        ];
+
+        let filteredData = [...lensData];
+
+        // 同步滑桿和輸入框
+        function syncRangeAndInput(rangeId, inputId) {
+            const range = document.getElementById(rangeId);
+            const input = document.getElementById(inputId);
+            range.addEventListener('input', () => {
+                input.value = range.value;
+                applyFilters();
+            });
+            input.addEventListener('input', () => {
+                let value = parseFloat(input.value);
+                if (isNaN(value)) value = range.min;
+                if (value < range.min) value = range.min;
+                if (value > range.max) value = range.max;
+                range.value = value;
+                input.value = value;
+                applyFilters();
+            });
+        }
+
+        syncRangeAndInput('sphRange', 'sphInput');
+        syncRangeAndInput('cylRange', 'cylInput');
+        syncRangeAndInput('addRange', 'addInput');
+
+        function renderData(data = filteredData) {
+            const container = document.getElementById('dataRows');
+            container.innerHTML = '';
+
+            data.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'grid-row';
+                row.setAttribute('tabindex', '0');
+                row.setAttribute('aria-label', `鏡片數據 ${item.id}`);
+                row.addEventListener('click', () => showDetails(item));
+                row.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') showDetails(item);
+                });
+
+                row.innerHTML = `
+                    <div>${String(item.id).padStart(3, '0')}</div>
+                    <div><span class="eye-badge ${item.eye === 'OS' ? 'eye-left' : 'eye-right'}">${item.eye}</span></div>
+                    <div><span class="power-value ${item.sph < 0 ? 'negative' : 'positive'}">${item.sph > 0 ? '+' : ''}${item.sph.toFixed(2)}</span></div>
+                    <div><span class="power-value ${item.cyl !== 0 ? 'negative' : ''}">${item.cyl === 0 ? '-' : item.cyl.toFixed(2)}</span></div>
+                    <div>${item.axis ? item.axis + '°' : '-'}</div>
+                    <div><span class="power-value positive">+${item.add.toFixed(2)}</span></div>
+                    <div>16 個</div>
+                    <div><button class="btn btn-primary" aria-label="查看詳情 ${item.id}" onclick="event.stopPropagation(); showDetails(${JSON.stringify(item).replace(/"/g, '"')})">查看詳情</button></div>
+                `;
+
+                container.appendChild(row);
+            });
+        }
+
+        function applyFilters() {
+            const eyeFilter = document.getElementById('eyeFilter').value;
+            const sphValue = parseFloat(document.getElementById('sphInput').value);
+            const cylValue = parseFloat(document.getElementById('cylInput').value);
+            const addValue = parseFloat(document.getElementById('addInput').value);
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredData = lensData.filter(item => {
+                if (eyeFilter && item.eye !== eyeFilter) return false;
+                if (!isNaN(sphValue) && item.sph !== sphValue) return false;
+                if (!isNaN(cylValue) && item.cyl !== cylValue) return false;
+                if (!isNaN(addValue) && item.add !== addValue) return false;
+                if (searchInput && !String(item.id).includes(searchInput)) return false;
+                return true;
+            });
+
+            renderData(filteredData);
+        }
+
+        function clearFilters() {
+            document.getElementById('eyeFilter').value = '';
+            document.getElementById('sphRange').value = 0;
+            document.getElementById('sphInput').value = 0;
+            document.getElementById('cylRange').value = 0;
+            document.getElementById('cylInput').value = 0;
+            document.getElementById('addRange').value = 0;
+            document.getElementById('addInput').value = 0;
+            document.getElementById('searchInput').value = '';
+            filteredData = [...lensData];
+            renderData();
+        }
+
+        function showDetails(item) {
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('modalContent');
+            
+            const folderName = `${item.eye}${item.sph > 0 ? '+' : ''}${item.sph.toFixed(2)}${item.cyl !== 0 ? item.cyl.toFixed(2) + 'X' + String(item.axis).padStart(3, '0') : 'DS'}ADD+${item.add.toFixed(2)}D(${item.id})`;
+            
+            content.innerHTML = `
+                <h3>資料夾: ${folderName}</h3>
+                <div style="margin: 20px 0;">
+                    <p><strong>編號:</strong> ${String(item.id).padStart(3, '0')}</p>
+                    <p><strong>眼別:</strong> ${item.eye} (${item.eye === 'OS' ? '左眼' : '右眼'})</p>
+                    <p><strong>球面度數:</strong> ${item.sph > 0 ? '+' : ''}${item.sph.toFixed(2)}D ${item.sph < 0 ? '(近視)' : item.sph > 0 ? '(遠視)' : ''}</p>
+                    <p><strong>散光度數:</strong> ${item.cyl === 0 ? '無散光' : item.cyl.toFixed(2) + 'D'}</p>
+                    <p><strong>散光軸度:</strong> ${item.axis ? item.axis + '°' : '無'}</p>
+                    <p><strong>老花度數:</strong> +${item.add.toFixed(2)}D</p>
+                </div>
+                <h4>檔案列表 (16 個檔案)</h4>
+                <div class="file-grid">
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(Prs)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>PRS</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(Axis)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>AX</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(Cyl)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>CYL</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(Sph)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>SPH</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(SphAv)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>SPHAV</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(X)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>X</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(Y)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>Y</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">XLSX</div>
+                        <div>${String(item.id).padStart(5, '0')}(${item.eye === 'OS' ? 'Left' : 'Right'})(Z)</div>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-type">PNG</div>
+                        <div>Z</div>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            trapFocus(modal);
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        function trapFocus(modal) {
+            const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            modal.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+                if (e.key === 'Tab') {
+                    if (e.shiftKey && document.activeElement === firstElement) {
+                        e.preventDefault();
+                        lastElement.focus();
+                    } else if (!e.shiftKey && document.activeElement === lastElement) {
+                        e.preventDefault();
+                        firstElement.focus();
+                    }
+                }
+            });
+        }
+
+        function exportData() {
+            const headers = ['編號', '眼別', '球面度數', '散光度數', '軸度', '老花度數'];
+            const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+                + headers.join(',') + '\n'
+                + filteredData.map(item => 
+                    `${item.id},${item.eye},${item.sph},${item.cyl},${item.axis || ''},${item.add}`
+                ).join('\n');
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `鏡片數據_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        let debounceTimeout;
+        document.getElementById('searchInput').addEventListener('input', () => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(applyFilters, 300);
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderData();
+        });
+    </script>
+</body>
+</html>
